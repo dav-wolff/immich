@@ -60,7 +60,7 @@ jobs:
         suffix: ['', '-cuda', '-rocm', '-openvino', '-armnn', '-rknn']
     steps:
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -90,7 +90,7 @@ jobs:
         suffix: ['']
     steps:
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -178,7 +178,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - uses: immich-app/devtools/actions/success-check@68f10eb389bb02a3cf9d1156111964c549eb421b # 0.0.4
+      - uses: immich-app/devtools/actions/success-check@53bb77345ee9f953f93bd6fd9980f07a2f24965e # success-check-action-v0.0.5
         with:
           needs: ${{ toJSON(needs) }}
 
@@ -189,6 +189,6 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - uses: immich-app/devtools/actions/success-check@68f10eb389bb02a3cf9d1156111964c549eb421b # 0.0.4
+      - uses: immich-app/devtools/actions/success-check@53bb77345ee9f953f93bd6fd9980f07a2f24965e # success-check-action-v0.0.5
         with:
           needs: ${{ toJSON(needs) }}
