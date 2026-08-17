@@ -56,13 +56,21 @@ export type ValidateRequest = {
 
 @Injectable()
 export class AuthService extends BaseService {
-  async login(dto: LoginCredentialDto, details: LoginDetails) {
+  async login(dto: LoginCredentialDto, details: LoginDetails, remoteEmail?: string) {
     const config = await this.getConfig({ withCache: false });
     if (!config.passwordLogin.enabled) {
       throw new UnauthorizedException('Password login has been disabled');
     }
 
+    if (remoteEmail) {
+      const user = await this.userRepository.getByEmail(remoteEmail);
+      if (user) {
+        return this.createLoginResponse(user, details);
+      }
+    }
+
     const user = await this.userRepository.getByEmail(dto.email, { withPassword: true });
+
     // Always run bcrypt so response time is constant regardless of whether the email
     // is registered, preventing timing-based user enumeration.
     const isAuthenticated = this.cryptoRepository.compareBcrypt(dto.password, user?.password ?? LOGIN_DUMMY_HASH);
