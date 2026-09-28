@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, HttpCode, HttpStatus, Post, Put, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
@@ -38,8 +38,9 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Body() loginCredential: LoginCredentialDto,
     @GetLoginDetails() loginDetails: LoginDetails,
+    @Headers('remote-email') remoteEmail?: string,
   ): Promise<LoginResponseDto> {
-    const body = await this.service.login(loginCredential, loginDetails);
+    const body = await this.service.login(loginCredential, loginDetails, remoteEmail);
     return respondWithCookie(res, body, {
       isSecure: loginDetails.isSecure,
       values: [
@@ -98,7 +99,10 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Auth() auth: AuthDto,
   ): Promise<LogoutResponseDto> {
-    const authType = (request.cookies || {})[ImmichCookie.AuthType];
+    let authType = (request.cookies || {})[ImmichCookie.AuthType];
+    if (request.headers["remote-email"]) {
+      authType = AuthType.TrustedHeader;
+    }
 
     const body = await this.service.logout(auth, authType);
     return respondWithoutCookie(res, body, [

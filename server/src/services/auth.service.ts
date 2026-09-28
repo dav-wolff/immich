@@ -56,13 +56,21 @@ export type ValidateRequest = {
 
 @Injectable()
 export class AuthService extends BaseService {
-  async login(dto: LoginCredentialDto, details: LoginDetails) {
+  async login(dto: LoginCredentialDto, details: LoginDetails, remoteEmail?: string) {
     const config = await this.getConfig({ withCache: false });
     if (!config.passwordLogin.enabled) {
       throw new UnauthorizedException('Password login has been disabled');
     }
 
+    if (remoteEmail) {
+      const user = await this.userRepository.getByEmail(remoteEmail);
+      if (user) {
+        return this.createLoginResponse(user, details);
+      }
+    }
+
     const user = await this.userRepository.getByEmail(dto.email, { withPassword: true });
+
     // Always run bcrypt so response time is constant regardless of whether the email
     // is registered, preventing timing-based user enumeration.
     const isAuthenticated = this.cryptoRepository.compareBcrypt(dto.password, user?.password ?? LOGIN_DUMMY_HASH);
@@ -246,6 +254,8 @@ export class AuthService extends BaseService {
       this.getBearerToken(headers) ||
       this.getCookieToken(headers)) as string;
     const apiKey = (headers[ImmichHeader.ApiKey] || queryParams[ImmichQuery.ApiKey]) as string;
+    const remoteEmail = headers["remote-email"] as string | undefined;
+    const remoteName = headers["remote-name"] as string | undefined;
 
     if (shareKey) {
       return this.validateSharedLinkKey(shareKey);
@@ -257,6 +267,12 @@ export class AuthService extends BaseService {
 
     if (session) {
       return this.validateSession(session, headers);
+    }
+
+    // must come after session, otherwise mobile complains
+    // "Sync endpoints cannot be used with API keys"
+    if (remoteEmail) {
+      return this.validateRemoteUser(remoteEmail, remoteName);
     }
 
     if (apiKey) {
@@ -445,6 +461,10 @@ export class AuthService extends BaseService {
   }
 
   private async getLogoutEndpoint(authType: AuthType, oauthBearerToken?: string | null): Promise<string> {
+    if (authType === AuthType.TrustedHeader) {
+      return process.env.TRUSTED_HEADER_LOGOUT || LOGIN_URL;
+    }
+
     if (authType !== AuthType.OAuth) {
       return LOGIN_URL;
     }
@@ -586,6 +606,36 @@ export class AuthService extends BaseService {
     }
 
     throw new UnauthorizedException('Invalid user token');
+  }
+
+  private async validateRemoteUser(email: string, name: string | undefined): Promise<AuthDto> {
+    let user = await this.userRepository.getByEmail(email, {});
+
+    // look at line 266 for oauth registration example
+
+    const autoRegister = true;
+    if (!user) {
+      if (!autoRegister) {
+        this.logger.warn(
+          `Unable to register ${email || '(no email)'}. To enable set OAuth Auto Register to true in admin settings.`,
+        );
+        throw new UnauthorizedException('User does not exist and auto registering is disabled.');
+      }
+
+      const userName = name ?? "";
+      // TODO: can get called multiple times for new users, need a mutex? or just catch the error?
+      user = await this.createUser({
+        name: userName,
+        email,
+        // quotaSizeInBytes
+        // storageLabel
+        // isAdmin
+      });
+    }
+
+    return {
+      user,
+    };
   }
 
   async unlockSession(auth: AuthDto, dto: SessionUnlockDto): Promise<void> {

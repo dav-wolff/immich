@@ -1,0 +1,36 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+// @dart=2.18
+
+// ignore_for_file: unused_element, unused_import
+// ignore_for_file: always_put_required_named_parameters_first
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: lines_longer_than_80_chars
+
+import 'package:openapi/api.dart';
+import 'package:test/test.dart';
+
+
+/// tests for JobsApi
+void main() {
+  // final instance = JobsApi();
+
+  group('tests for JobsApi', () {
+    //Future createJob(JobCreateDto jobCreateDto) async
+    test('test createJob', () async {
+      // TODO
+    });
+
+    //Future<AllJobStatusResponseDto> getAllJobsStatus() async
+    test('test getAllJobsStatus', () async {
+      // TODO
+    });
+
+    //Future<JobStatusDto> sendJobCommand(JobName id, JobCommandDto jobCommandDto) async
+    test('test sendJobCommand', () async {
+      // TODO
+    });
+
+  });
+}

@@ -52,10 +52,6 @@ class AuthManager {
       return;
     }
 
-    if (!this.#hasAuthCookie()) {
-      return;
-    }
-
     return this.refresh();
   }
 
