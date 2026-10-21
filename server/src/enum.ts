@@ -4,6 +4,7 @@ import z from 'zod';
 export enum AuthType {
   Password = 'password',
   OAuth = 'oauth',
+  TrustedHeader = 'trustedheader',
 }
 
 export enum ImmichCookie {
